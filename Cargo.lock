@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "rayton"
+name = "based-tracer"
 version = "0.1.0"
