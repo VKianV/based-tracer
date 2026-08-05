@@ -1,7 +1,7 @@
 use std::{
     collections::HashMap,
     fs,
-    io::{self, BufRead, BufReader},
+    io::{BufRead, BufReader, Error, ErrorKind::InvalidData, Result},
 };
 
 pub struct Config {
@@ -27,8 +27,8 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn load(path: &str) -> io::Result<Self> {
-        let mut cfg = Config::default();
+    pub fn load(path: &str) -> Result<Self> {
+        let mut cfg = Self::default();
 
         let contents = fs::read_to_string(path)?;
 
@@ -44,11 +44,36 @@ impl Config {
             };
 
             match key.trim() {
-                "image_width" => cfg.image_width = value.trim().parse().unwrap(),
-                "image_height" => cfg.image_height = value.trim().parse().unwrap(),
-                "samples_per_pixel" => cfg.samples_per_pixel = value.trim().parse().unwrap(),
-                "max_depth" => cfg.max_depth = value.trim().parse().unwrap(),
-                "vfov" => cfg.vfov = value.trim().parse().unwrap(),
+                "image_width" => {
+                    cfg.image_width = value
+                        .trim()
+                        .parse()
+                        .map_err(|e| Error::new(InvalidData, e))?;
+                }
+                "image_height" => {
+                    cfg.image_height = value
+                        .trim()
+                        .parse()
+                        .map_err(|e| Error::new(InvalidData, e))?;
+                }
+                "samples_per_pixel" => {
+                    cfg.samples_per_pixel = value
+                        .trim()
+                        .parse()
+                        .map_err(|e| Error::new(InvalidData, e))?;
+                }
+                "max_depth" => {
+                    cfg.max_depth = value
+                        .trim()
+                        .parse()
+                        .map_err(|e| Error::new(InvalidData, e))?;
+                }
+                "vfov" => {
+                    cfg.vfov = value
+                        .trim()
+                        .parse()
+                        .map_err(|e| Error::new(InvalidData, e))?;
+                }
                 "output_name" => cfg.output_name = value.trim().to_string(),
                 _ => {}
             }
@@ -58,7 +83,7 @@ impl Config {
     }
 }
 
-pub fn load_config(path: &str) -> io::Result<HashMap<String, String>> {
+pub fn load_config(path: &str) -> Result<HashMap<String, String>> {
     let file = fs::File::open(path)?;
     let reader = BufReader::new(file);
     let mut map = HashMap::new();
@@ -86,5 +111,5 @@ pub fn get_u32(map: &HashMap<String, String>, key: &str, default: u32) -> u32 {
 }
 
 pub fn get_string<'a>(map: &'a HashMap<String, String>, key: &str, default: &'a str) -> &'a str {
-    map.get(key).map(|s| s.as_str()).unwrap_or(default)
+    map.get(key).map_or(default, |s| s.as_str())
 }
