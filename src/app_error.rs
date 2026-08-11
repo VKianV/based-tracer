@@ -10,6 +10,17 @@ pub enum AppError {
     Config(ConfigError),
 }
 
+impl error::Error for AppError {}
+
+impl fmt::Display for AppError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AppError::Io(e) => write!(f, "[I/O Failure] {}", e),
+            AppError::Config(e) => write!(f, "[Config Failure] {}", e),
+        }
+    }
+}
+
 impl From<io::Error> for AppError {
     fn from(e: io::Error) -> Self {
         AppError::Io(e)

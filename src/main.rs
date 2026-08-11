@@ -10,7 +10,14 @@ use std::{
     io::{BufWriter, Write},
 };
 
-fn main() -> Result<(), AppError> {
+fn main() {
+    if let Err(e) = run() {
+        eprintln!("{}", e);
+        std::process::exit(1);
+    }
+}
+
+fn run() -> Result<(), AppError> {
     let config = Config::load_config(".env")?;
     let file = File::create(config.get_str("output_name")?)?;
     let mut out = BufWriter::new(&file);
@@ -22,15 +29,12 @@ fn main() -> Result<(), AppError> {
         * (config.get_u32("image_width")? as f64 / config.get_u32("image_height")? as f64);
     let camera_center = Point3::zero();
 
-    // Viewport vectors
     let viewport_hor = Vec3::new(viewport_width, 0.0, 0.0);
     let viewport_ver = Vec3::new(0.0, -viewport_height, 0.0);
 
-    // Pixel delta vectors
     let pixel_delta_hor = viewport_hor / config.get_u32("image_width")? as f64;
     let pixel_delta_ver = viewport_ver / config.get_u32("image_height")? as f64;
 
-    // Upper‑left pixel location
     let viewport_upper_left =
         camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_hor / 2.0 - viewport_ver / 2.0;
     let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_hor + pixel_delta_ver);
@@ -63,6 +67,5 @@ fn main() -> Result<(), AppError> {
     }
 
     println!("\n\x1b[?25hDone!");
-
     Ok(())
 }
