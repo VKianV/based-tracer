@@ -11,7 +11,7 @@ impl Vec3 {
         Self(x, y, z)
     }
 
-    pub const fn zero() -> Self {
+    pub const fn zero() -> Point3 {
         Self(0.0, 0.0, 0.0)
     }
 

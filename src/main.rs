@@ -3,7 +3,7 @@ use based_tracer::{
     color::{ray_color, write_color},
     config::Config,
     ray::Ray,
-    vec3::{Point3, Vec3},
+    vec3::{Point3},
 };
 use std::{
     fs::File,
@@ -26,17 +26,17 @@ fn run() -> Result<(), AppError> {
     let focal_length = config.get_f64("focal_length")?;
     let viewport_height = config.get_f64("viewport_height")?;
     let viewport_width = viewport_height
-        * (config.get_u32("image_width")? as f64 / config.get_u32("image_height")? as f64);
+        * (config.get_f64("image_width")? / config.get_f64("image_height")?);
     let camera_center = Point3::zero();
 
-    let viewport_hor = Vec3::new(viewport_width, 0.0, 0.0);
-    let viewport_ver = Vec3::new(0.0, -viewport_height, 0.0);
+    let viewport_hor = Point3::new(viewport_width, 0.0, 0.0);
+    let viewport_ver = Point3::new(0.0, -viewport_height, 0.0);
 
-    let pixel_delta_hor = viewport_hor / config.get_u32("image_width")? as f64;
-    let pixel_delta_ver = viewport_ver / config.get_u32("image_height")? as f64;
+    let pixel_delta_hor = viewport_hor / config.get_f64("image_width")?;
+    let pixel_delta_ver = viewport_ver / config.get_f64("image_height")?;
 
     let viewport_upper_left =
-        camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_hor / 2.0 - viewport_ver / 2.0;
+        camera_center - Point3::new(0.0, 0.0, focal_length) - viewport_hor / 2.0 - viewport_ver / 2.0;
     let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_hor + pixel_delta_ver);
 
     writeln!(out, "P3")?;
