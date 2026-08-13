@@ -50,8 +50,6 @@ impl Config {
     }
 
     pub fn get_bool(self, key: &str) -> Result<bool, ConfigError> {
-        self.get_str(key)?
-            .parse::<bool>()
-            .map_err(Into::into)
+        self.get_str(key)?.parse::<bool>().map_err(Into::into)
     }
 }
