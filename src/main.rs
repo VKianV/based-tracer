@@ -23,6 +23,9 @@ fn run() -> Result<(), AppError> {
     let file = File::create(config.get_str("output_name")?)?;
     let mut out = BufWriter::new(&file);
 
+    let image_height = config.get_u32("image_height")?;
+    let image_width = config.get_u32("image_width")?;
+
     // Camera
     let focal_length = config.get_f64("focal_length")?;
     let viewport_height = config.get_f64("viewport_height")?;
@@ -56,8 +59,8 @@ fn run() -> Result<(), AppError> {
     writeln!(out, "255")?;
 
     print!("\x1b[?25lScanlines remaining: ");
-    for hght_indx in 0..config.get_u32("image_height")? {
-        for wdth_indx in 0..config.get_u32("image_width")? {
+    for hght_indx in 0..image_height {
+        for wdth_indx in 0..image_width {
             let pixel_center = pixel00_loc
                 + (wdth_indx as f64 * pixel_delta_hor)
                 + (hght_indx as f64 * pixel_delta_ver);
@@ -65,12 +68,11 @@ fn run() -> Result<(), AppError> {
             let r = Ray::new(camera_center, ray_direction);
 
             write_color(&mut out, ray_color(&r))?;
-
-            print!(
-                "\x1b[21G\x1b[K {}",
-                config.get_u32("image_height")? - hght_indx
-            );
         }
+        print!(
+            "\x1b[21G\x1b[K {}",
+            config.get_u32("image_height")? - hght_indx
+        );
     }
 
     println!("\n\x1b[?25hDone!");
