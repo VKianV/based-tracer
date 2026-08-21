@@ -8,6 +8,7 @@ use based_tracer::{
 use std::{
     fs::File,
     io::{BufWriter, Write},
+    time::Instant,
 };
 
 fn main() {
@@ -18,6 +19,7 @@ fn main() {
 }
 
 fn run() -> Result<(), AppError> {
+    let start = Instant::now();
     // prepering the files and loading the config
     let config = Config::load_config(".env")?;
     let file = File::create(config.get_str("output_name")?)?;
@@ -75,6 +77,6 @@ fn run() -> Result<(), AppError> {
         );
     }
 
-    println!("\n\x1b[?25hDone!");
+    println!("\n\x1b[?25hDone in {}ms!", start.elapsed().as_millis());
     Ok(())
 }
