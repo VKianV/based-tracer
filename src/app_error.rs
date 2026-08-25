@@ -15,21 +15,21 @@ impl error::Error for AppError {}
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            AppError::Io(e) => write!(f, "[I/O Failure] {}", e),
-            AppError::Config(e) => write!(f, "[Config Failure] {}", e),
+            Self::Io(e) => write!(f, "[I/O Failure] {e}"),
+            Self::Config(e) => write!(f, "[Config Failure] {e}"),
         }
     }
 }
 
 impl From<io::Error> for AppError {
     fn from(e: io::Error) -> Self {
-        AppError::Io(e)
+        Self::Io(e)
     }
 }
 
 impl From<ConfigError> for AppError {
     fn from(e: ConfigError) -> Self {
-        AppError::Config(e)
+        Self::Config(e)
     }
 }
 
@@ -44,10 +44,10 @@ pub enum ConfigError {
 impl fmt::Display for ConfigError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ConfigError::KeyNotFound(key) => write!(f, "Configuration key '{}' not found", key),
-            ConfigError::ParseF64(e) => write!(f, "Failed to parse float: {}", e),
-            ConfigError::ParseU32(e) => write!(f, "Failed to parse integer: {}", e),
-            ConfigError::ParseBool(e) => write!(f, "Failed to parse boolean: {}", e),
+            Self::KeyNotFound(key) => write!(f, "Configuration key '{key}' not found"),
+            Self::ParseF64(e) => write!(f, "Failed to parse float: {e}"),
+            Self::ParseU32(e) => write!(f, "Failed to parse integer: {e}"),
+            Self::ParseBool(e) => write!(f, "Failed to parse boolean: {e}"),
         }
     }
 }
@@ -56,18 +56,18 @@ impl error::Error for ConfigError {}
 
 impl From<ParseFloatError> for ConfigError {
     fn from(e: ParseFloatError) -> Self {
-        ConfigError::ParseF64(e)
+        Self::ParseF64(e)
     }
 }
 
 impl From<ParseBoolError> for ConfigError {
     fn from(e: ParseBoolError) -> Self {
-        ConfigError::ParseBool(e)
+        Self::ParseBool(e)
     }
 }
 
 impl From<ParseIntError> for ConfigError {
     fn from(e: ParseIntError) -> Self {
-        ConfigError::ParseU32(e)
+        Self::ParseU32(e)
     }
 }

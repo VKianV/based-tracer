@@ -7,38 +7,47 @@ pub type Point3 = Vec3;
 pub struct Vec3(f64, f64, f64);
 
 impl Vec3 {
+    #[must_use]
     pub const fn new(x: f64, y: f64, z: f64) -> Self {
         Self(x, y, z)
     }
 
-    pub const fn zero() -> Point3 {
+    #[must_use]
+    pub const fn zero() -> Self {
         Self(0.0, 0.0, 0.0)
     }
 
-    pub fn x(self) -> f64 {
+    #[must_use]
+    pub const fn x(self) -> f64 {
         self.0
     }
 
-    pub fn y(self) -> f64 {
+    #[must_use]
+    pub const fn y(self) -> f64 {
         self.1
     }
 
-    pub fn z(self) -> f64 {
+    #[must_use]
+    pub const fn z(self) -> f64 {
         self.2
     }
 
+    #[must_use]
     pub fn length_squared(self) -> f64 {
         self.0 * self.0 + self.1 * self.1 + self.2 * self.2
     }
 
+    #[must_use]
     pub fn length(self) -> f64 {
         self.length_squared().sqrt()
     }
 
+    #[must_use]
     pub fn dot(self, rhs: Self) -> f64 {
         self.0 * rhs.0 + self.1 * rhs.1 + self.2 * rhs.2
     }
 
+    #[must_use]
     pub fn cross(self, rhs: Self) -> Self {
         Self(
             self.1 * rhs.2 - self.2 * rhs.1,
@@ -47,6 +56,7 @@ impl Vec3 {
         )
     }
 
+    #[must_use]
     pub fn unit(self) -> Self {
         self / self.length()
     }

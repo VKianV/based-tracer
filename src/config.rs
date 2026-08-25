@@ -31,7 +31,7 @@ impl Config {
             }
         }
 
-        Ok(Config { map })
+        Ok(Self { map })
     }
 
     pub fn get_str(&self, key: &str) -> Result<&str, ConfigError> {

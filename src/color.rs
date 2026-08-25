@@ -4,6 +4,7 @@ use crate::{
 };
 use std::io::{Result, Write};
 
+#[must_use]
 pub fn hit_sphere(center: Point3, radius: f64, r: &Ray) -> Option<f64> {
     let oc = center - r.origin();
     let a = r.direction().dot(r.direction());
@@ -17,6 +18,7 @@ pub fn hit_sphere(center: Point3, radius: f64, r: &Ray) -> Option<f64> {
     }
 }
 
+#[must_use]
 pub fn ray_color(r: &Ray) -> RGB {
     // Compute surface normal at hit point and map to color
     if let Some(t) = hit_sphere(Point3::new(0.0, 0.0, -1.0), 0.5, r) {

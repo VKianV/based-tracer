@@ -78,5 +78,6 @@ fn run() -> Result<(), AppError> {
     }
 
     println!("\n\x1b[?25hDone in {}ms!", start.elapsed().as_millis());
+
     Ok(())
 }
