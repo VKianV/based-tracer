@@ -25,14 +25,13 @@ fn run() -> Result<(), AppError> {
     let file = File::create(config.get_str("output_name")?)?;
     let mut out = BufWriter::new(&file);
 
-    let image_height = config.get_u32("image_height")?;
-    let image_width = config.get_u32("image_width")?;
+    let image_height = config.get_f64("image_height")?;
+    let image_width = config.get_f64("image_width")?;
 
     // Camera
     let focal_length = config.get_f64("focal_length")?;
     let viewport_height = config.get_f64("viewport_height")?;
-    let viewport_width =
-        viewport_height * (config.get_f64("image_width")? / config.get_f64("image_height")?);
+    let viewport_width = viewport_height * (image_width / image_height);
     let camera_center = Point3::zero();
 
     // Calculate the vectors across the horizontal and down the vertical viewport edges.
@@ -40,8 +39,8 @@ fn run() -> Result<(), AppError> {
     let viewport_ver = Point3::new(0.0, -viewport_height, 0.0);
 
     // Calculate the horizontal and vertical delta vectors from pixel to pixel.
-    let pixel_delta_hor = viewport_hor / config.get_f64("image_width")?;
-    let pixel_delta_ver = viewport_ver / config.get_f64("image_height")?;
+    let pixel_delta_hor = viewport_hor / image_width;
+    let pixel_delta_ver = viewport_ver / image_height;
 
     // Calculate the location of the upper left pixel
     let viewport_upper_left = camera_center
@@ -52,17 +51,12 @@ fn run() -> Result<(), AppError> {
 
     // render
     writeln!(out, "P3")?;
-    writeln!(
-        out,
-        "{} {}",
-        config.get_u32("image_width")?,
-        config.get_u32("image_height")?
-    )?;
+    writeln!(out, "{} {}", image_width, image_height)?;
     writeln!(out, "255")?;
 
     print!("\x1b[?25lScanlines remaining: ");
-    for hght_indx in 0..image_height {
-        for wdth_indx in 0..image_width {
+    for hght_indx in 0..(image_height as u32) {
+        for wdth_indx in 0..(image_width as u32) {
             let pixel_center = pixel00_loc
                 + (wdth_indx as f64 * pixel_delta_hor)
                 + (hght_indx as f64 * pixel_delta_ver);
@@ -71,10 +65,7 @@ fn run() -> Result<(), AppError> {
 
             write_color(&mut out, ray_color(&r))?;
         }
-        print!(
-            "\x1b[21G\x1b[K {}",
-            config.get_u32("image_height")? - hght_indx
-        );
+        print!("\x1b[21G\x1b[K {}", image_height as u32 - hght_indx);
     }
 
     println!("\n\x1b[?25hDone in {}ms!", start.elapsed().as_millis());
