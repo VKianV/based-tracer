@@ -3,12 +3,17 @@ use based_tracer::{
     color::{ray_color, write_color},
     config::Config,
     ray::Ray,
-    vec3::Point3,
+    vec3::{Point3, RGB},
 };
 use std::{
+    collections::BTreeMap,
     fs::File,
-    io::{BufWriter, Write},
-    ops::Range,
+    io::{BufWriter,Write},
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        mpsc,
+        Arc,
+    },
     thread,
     time::Instant,
 };
@@ -21,112 +26,127 @@ fn main() {
 }
 
 fn run() -> Result<(), AppError> {
-    let load_time = Instant::now();
+    let start = Instant::now();
 
-    // prepering the files and loading the config
+    // Load config and create output file
     let config = Config::load_config(".env")?;
-    let file = File::create(config.get_str("output_name")?)?;
-    let threads_count = config.get_u32("threads")?;
-
     let image_height = config.get_u32("image_height")?;
     let image_width = config.get_u32("image_width")?;
-    let image_size = image_width as usize * image_height as usize;
+    let file = File::create(config.get_str("output_name")?)?;
 
-    // Camera
+    // Camera setup (same as before)
     let focal_length = config.get_f64("focal_length")?;
     let viewport_height = config.get_f64("viewport_height")?;
-    let viewport_width = viewport_height * (image_width as f64 / image_height as f64);
+    let viewport_width =
+        viewport_height * (config.get_f64("image_width")? / config.get_f64("image_height")?);
     let camera_center = Point3::zero();
 
-    // Calculate the vectors across the horizontal and down the vertical viewport edges.
     let viewport_hor = Point3::new(viewport_width, 0.0, 0.0);
     let viewport_ver = Point3::new(0.0, -viewport_height, 0.0);
 
-    // Calculate the horizontal and vertical delta vectors from pixel to pixel.
-    let pixel_delta_hor = viewport_hor / image_width as f64;
-    let pixel_delta_ver = viewport_ver / image_height as f64;
+    let pixel_delta_hor = viewport_hor / config.get_f64("image_width")?;
+    let pixel_delta_ver = viewport_ver / config.get_f64("image_height")?;
 
-    // Calculate the location of the upper left pixel
     let viewport_upper_left = camera_center
         - Point3::new(0.0, 0.0, focal_length)
         - viewport_hor / 2.0
         - viewport_ver / 2.0;
     let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_hor + pixel_delta_ver);
 
-    let loaded_in = load_time.elapsed().as_millis();
+    // Determine number of threads
+    let num_threads = thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4)
+        .min(image_height as usize)
+        .max(1);
 
-    println!("Data loaded in {}ms!", loaded_in);
+    // Bounded channel to limit how many rows can be in flight.
+    // This prevents workers from producing too much data before the writer can consume it.
+    let channel_bound = num_threads * 2; // adjust if needed
+    let (tx, rx) = mpsc::sync_channel::<(usize, Vec<RGB>)>(channel_bound);
 
-    let calculation_time = Instant::now();
+    // Spawn the writer thread
+    let writer_handle = thread::spawn(move || -> Result<(), AppError> {
+        let mut out = BufWriter::new(file);
+        let mut buffer: BTreeMap<usize, Vec<RGB>> = BTreeMap::new();
+        let mut next_row_to_write = 0usize;
 
-    // render
+        // Receive rows and write them in order
+        while let Ok((row_index, row_colors)) = rx.recv() {
+            buffer.insert(row_index, row_colors);
 
-    let calculate_range = |range: Range<usize>| {
-        range
-            .into_iter()
-            .map(|index| {
-                let x = index % image_width as usize;
-                let y = index / image_width as usize;
-
-                let pixel_center =
-                    pixel00_loc + x as f64 * pixel_delta_hor + y as f64 * pixel_delta_ver;
-
-                let ray_direction = pixel_center - camera_center;
-                let ray = Ray::new(camera_center, ray_direction);
-
-                ray_color(&ray)
-            })
-            .collect::<Vec<_>>()
-    };
-
-    let pixels = thread::scope(|scope| {
-        let chunk_size = image_size.div_ceil(threads_count as usize);
-
-        let mut handles = Vec::with_capacity(threads_count as usize);
-
-        for thread_id in 0..threads_count as usize {
-            let start = thread_id * chunk_size;
-            let end = (start + chunk_size).min(image_size);
-
-            if start >= image_size {
-                break;
+            // Write all consecutive rows that are now available
+            while let Some(colors) = buffer.remove(&next_row_to_write) {
+                for color in colors {
+                    write_color(&mut out, color)?;
+                }
+                next_row_to_write += 1;
             }
-
-            handles.push(scope.spawn(move || calculate_range(start..end)));
         }
 
-        let mut pixels = Vec::with_capacity(image_size);
-
-        for handle in handles {
-            pixels.extend(handle.join().unwrap());
+        // Channel closed – write any remaining rows (shouldn't happen, but just in case)
+        while let Some(colors) = buffer.remove(&next_row_to_write) {
+            for color in colors {
+                write_color(&mut out, color)?;
+            }
+            next_row_to_write += 1;
         }
 
-        pixels
+        out.flush()?;
+        Ok(())
     });
 
-    let calculated_in = calculation_time.elapsed().as_millis();
+    // Atomic counter for dynamic row distribution
+    let next_row = Arc::new(AtomicUsize::new(0));
+    let mut worker_handles = Vec::with_capacity(num_threads);
 
-    println!("Data calculated in {}ms!", calculated_in);
+    for _ in 0..num_threads {
+        // Clone the sender for this worker
+        let tx = tx.clone();
+        let next_row = Arc::clone(&next_row);
 
-    let write_time = Instant::now();
+        // Move necessary data into the closure (they are Copy or cloneable)
+        let handle = thread::spawn(move || {
+            loop {
+                // Fetch the next row index
+                let row = next_row.fetch_add(1, Ordering::Relaxed);
+                if row >= image_height as usize {
+                    break;
+                }
 
-    let mut out = BufWriter::new(file);
+                // Compute colors for this row
+                let mut row_colors = Vec::with_capacity(image_width as usize);
+                for col in 0..image_width as usize {
+                    let pixel_center = pixel00_loc
+                        + (col as f64 * pixel_delta_hor)
+                        + (row as f64 * pixel_delta_ver);
+                    let ray_direction = pixel_center - camera_center;
+                    let r = Ray::new(camera_center, ray_direction);
+                    let color = ray_color(&r);
+                    row_colors.push(color);
+                }
 
-    writeln!(out, "P6")?;
-    writeln!(out, "{} {}", image_width, image_height)?;
-    writeln!(out, "255")?;
+                // Send the row to the writer; if send fails, the writer has died
+                if tx.send((row, row_colors)).is_err() {
+                    break;
+                }
+            }
+        });
 
-    for pixel in pixels {
-        write_color(&mut out, pixel)?;
+        worker_handles.push(handle);
     }
 
-    let written_in = write_time.elapsed().as_millis();
+    // Drop the original sender so the channel closes when all workers finish
+    drop(tx);
 
-    println!("Written in {}ms!", written_in);
+    // Wait for all workers to finish
+    for handle in worker_handles {
+        let _ = handle.join();
+    }
 
-    let total_time = loaded_in + calculated_in + written_in;
+    // Wait for the writer thread to finish and get its result
+    writer_handle.join().unwrap()?;
 
-    println!("Done, program took {}ms!", total_time);
-
+    println!("\nDone in {}ms!", start.elapsed().as_millis());
     Ok(())
 }
