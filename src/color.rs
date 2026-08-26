@@ -33,10 +33,9 @@ pub fn ray_color(r: &Ray) -> RGB {
     (1.0 - a) * RGB::new(1.0, 1.0, 1.0) + a * RGB::new(0.5, 0.7, 1.0)
 }
 
-pub fn write_color<W: Write>(out: &mut W, pixel: RGB) -> std::io::Result<()> {
-    let r = (255.999 * pixel.x()) as u8;
-    let g = (255.999 * pixel.y()) as u8;
-    let b = (255.999 * pixel.z()) as u8;
-
-    out.write_all(&[r, g, b])
+pub fn color_to_bytes(color: RGB) -> [u8; 3] {
+    let r = (color.x().sqrt().clamp(0.0, 0.999) * 256.0) as u8;
+    let g = (color.y().sqrt().clamp(0.0, 0.999) * 256.0) as u8;
+    let b = (color.z().sqrt().clamp(0.0, 0.999) * 256.0) as u8;
+    [r, g, b]
 }
