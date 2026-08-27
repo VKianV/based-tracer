@@ -8,6 +8,7 @@ use std::{
 pub enum AppError {
     Io(io::Error),
     Config(ConfigError),
+    Thread(io::Error),
 }
 
 impl error::Error for AppError {}
@@ -17,6 +18,7 @@ impl fmt::Display for AppError {
         match self {
             Self::Io(e) => write!(f, "[I/O Failure] {e}"),
             Self::Config(e) => write!(f, "[Config Failure] {e}"),
+            Self::Thread(e) => write!(f, "[Thread Failure] A rendering thread panicked {e}"),
         }
     }
 }
