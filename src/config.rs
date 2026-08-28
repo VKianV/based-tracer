@@ -45,6 +45,14 @@ impl Config {
         self.get_str(key)?.parse::<f64>().map_err(Into::into)
     }
 
+    pub fn get_usize(&self, key: &str) -> Result<usize, ConfigError> {
+        self.get_str(key)?.parse::<usize>().map_err(Into::into)
+    }
+
+    pub fn get_u64(&self, key: &str) -> Result<u64, ConfigError> {
+        self.get_str(key)?.parse::<u64>().map_err(Into::into)
+    }
+
     pub fn get_u32(&self, key: &str) -> Result<u32, ConfigError> {
         self.get_str(key)?.parse::<u32>().map_err(Into::into)
     }
