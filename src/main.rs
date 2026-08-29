@@ -80,8 +80,8 @@ fn run() -> Result<(), AppError> {
                         break;
                     }
 
-                    let start_row = chunk_idx  ;
-                    let end_row = ((chunk_idx + 1)  ).min(image_height);
+                    let start_row = chunk_idx;
+                    let end_row = (chunk_idx + 1).min(image_height);
 
                     for h in start_row..end_row {
                         let mut row_bytes = Vec::with_capacity(image_width * 3);

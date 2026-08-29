@@ -1,1 +1,1 @@
-a multi threaded no dependicess raytracer written in rust
+A multithreaded, no-dependencies raytracer written in Rust
