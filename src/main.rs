@@ -92,7 +92,7 @@ fn run() -> Result<(), AppError> {
                             let ray_direction = pixel_center - camera_center;
                             let r = Ray::new(camera_center, ray_direction);
 
-                            write_color(&mut row_bytes, ray_color(&r)).unwrap();
+                            write_color(&mut row_bytes, &ray_color(&r)).unwrap();
                         }
                         tx.send((h, row_bytes)).unwrap();
                     }
