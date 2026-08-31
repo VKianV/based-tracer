@@ -7,6 +7,7 @@ use based_tracer::{
         hittable::{HittableList, Shapes},
         sphare::Sphere,
     },
+    utils::{GROUND_CENTER, SPHERE_CENTER},
     vec3::Point3,
 };
 use std::{
@@ -43,15 +44,8 @@ fn run() -> Result<(), AppError> {
     let mut out = BufWriter::new(file);
 
     let mut world = HittableList::new();
-
-    world.add(Shapes::Sphare(Sphere::new(
-        Point3::new(0.0, 0.0, -1.0),
-        0.5,
-    )));
-    world.add(Shapes::Sphare(Sphere::new(
-        Point3::new(0.0, -100.5, -1.0),
-        100.0,
-    )));
+    world.add(Shapes::Sphare(Sphere::new(SPHERE_CENTER, 0.5)));
+    world.add(Shapes::Sphare(Sphere::new(GROUND_CENTER, 100.0)));
 
     let viewport_width = viewport_height * image_width_f64 / image_height_f64;
     let camera_center = Point3::zero();

@@ -4,23 +4,6 @@ use crate::{
     vec3::{Point3, Vec3},
 };
 
-pub enum Shapes {
-    Sphare(Sphere),
-}
-
-pub trait Hittable: Send + Sync {
-    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
-}
-
-impl Hittable for Shapes {
-    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
-        match self {
-            Shapes::Sphare(s) => s.hit(r, ray_tmin, ray_tmax),
-            // Object::Plane(p) => p.hit(...),
-        }
-    }
-}
-
 #[derive(Default, Clone, Copy)]
 pub struct HitRecord {
     pub p: Point3,
@@ -39,6 +22,23 @@ impl HitRecord {
         } else {
             -outward_normal
         };
+    }
+}
+
+pub trait Hittable: Send + Sync {
+    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
+}
+
+pub enum Shapes {
+    Sphare(Sphere),
+}
+
+impl Hittable for Shapes {
+    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+        match self {
+            Shapes::Sphare(s) => s.hit(r, ray_tmin, ray_tmax),
+            // Object::Plane(p) => p.hit(...),
+        }
     }
 }
 
