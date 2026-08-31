@@ -31,6 +31,7 @@ fn main() {
 fn run() -> Result<(), AppError> {
     let start = Instant::now();
 
+    // importing the config data for initialization
     let config = Config::load_config("config.env")?;
     let image_width_f64 = config.get_f64("image_width")?;
     let image_height_f64 = config.get_f64("image_height")?;
@@ -40,13 +41,16 @@ fn run() -> Result<(), AppError> {
     let viewport_height = config.get_f64("viewport_height")?;
     let output_name = config.get_str("output_name")?;
 
+    // prepearing the output render
     let file = File::create(output_name)?;
     let mut out = BufWriter::new(file);
 
+    // adding items to the world
     let mut world = HittableList::new();
     world.add(Shapes::Sphare(Sphere::new(SPHERE_CENTER, 0.5)));
     world.add(Shapes::Sphare(Sphere::new(GROUND_CENTER, 100.0)));
 
+    // prepearing the viewport and the camera and justifications for pixel placement
     let viewport_width = viewport_height * image_width_f64 / image_height_f64;
     let camera_center = Point3::zero();
 
@@ -63,6 +67,7 @@ fn run() -> Result<(), AppError> {
 
     let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_hor + pixel_delta_ver);
 
+    // prepearing the hotloop for threads
     let num_threads = std::thread::available_parallelism()
         .map(|n| n.get())
         .unwrap_or(1)
