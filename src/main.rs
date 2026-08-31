@@ -3,9 +3,12 @@ use based_tracer::{
     color::{ray_color, write_color},
     config::Config,
     ray::Ray,
+    shapes::{
+        hittable::{HittableList, Shapes},
+        sphare::Sphere,
+    },
     vec3::Point3,
 };
-
 use std::{
     fs::File,
     io::{BufWriter, Write},
@@ -38,6 +41,17 @@ fn run() -> Result<(), AppError> {
 
     let file = File::create(output_name)?;
     let mut out = BufWriter::new(file);
+
+    let mut world = HittableList::new();
+
+    world.add(Shapes::Sphare(Sphere::new(
+        Point3::new(0.0, 0.0, -1.0),
+        0.5,
+    )));
+    world.add(Shapes::Sphare(Sphere::new(
+        Point3::new(0.0, -100.5, -1.0),
+        100.0,
+    )));
 
     let viewport_width = viewport_height * image_width_f64 / image_height_f64;
     let camera_center = Point3::zero();
@@ -72,6 +86,7 @@ fn run() -> Result<(), AppError> {
         for _ in 0..num_threads {
             let tx = tx.clone();
             let next_chunk = &next_chunk;
+            let world = &world;
 
             s.spawn(move || {
                 loop {
@@ -92,7 +107,7 @@ fn run() -> Result<(), AppError> {
                             let ray_direction = pixel_center - camera_center;
                             let r = Ray::new(camera_center, ray_direction);
 
-                            write_color(&mut row_bytes, &ray_color(&r)).unwrap();
+                            write_color(&mut row_bytes, &ray_color(&r, world)).unwrap();
                         }
                         tx.send((h, row_bytes)).unwrap();
                     }

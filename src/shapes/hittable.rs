@@ -1,0 +1,86 @@
+use crate::{
+    ray::Ray,
+    shapes::sphare::Sphere,
+    vec3::{Point3, Vec3},
+};
+
+pub enum Shapes {
+    Sphare(Sphere),
+}
+
+pub trait Hittable: Send + Sync {
+    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
+}
+
+impl Hittable for Shapes {
+    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+        match self {
+            Shapes::Sphare(s) => s.hit(r, ray_tmin, ray_tmax),
+            // Object::Plane(p) => p.hit(...),
+        }
+    }
+}
+
+#[derive(Default, Clone, Copy)]
+pub struct HitRecord {
+    pub p: Point3,
+    pub normal: Vec3,
+    pub t: f64,
+    pub front_face: bool,
+}
+
+impl HitRecord {
+    /// Sets the hit record normal vector.
+    /// NOTE: the parameter `outward_normal` is assumed to have unit length.
+    pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
+        self.front_face = r.direction().dot(outward_normal) < 0.0;
+        self.normal = if self.front_face {
+            outward_normal
+        } else {
+            -outward_normal
+        };
+    }
+}
+
+pub struct HittableList {
+    pub objects: Vec<Shapes>,
+}
+
+impl HittableList {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            objects: Vec::new(),
+        }
+    }
+
+    pub fn with_object(object: Shapes) -> Self {
+        let mut list = Self::new();
+        list.add(object);
+        list
+    }
+
+    pub fn clear(&mut self) {
+        self.objects.clear();
+    }
+
+    pub fn add(&mut self, object: Shapes) {
+        self.objects.push(object);
+    }
+}
+
+impl Hittable for HittableList {
+    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+        let mut closest_so_far = ray_tmax;
+        let mut hit_anything = None;
+
+        for object in &self.objects {
+            if let Some(temp_rec) = object.hit(r, ray_tmin, closest_so_far) {
+                closest_so_far = temp_rec.t;
+                hit_anything = Some(temp_rec);
+            }
+        }
+
+        hit_anything
+    }
+}
