@@ -1,6 +1,6 @@
 use crate::{
     ray::Ray,
-    shapes::sphare::Sphere,
+    shapes::sphare::Sphare,
     vec3::{Point3, Vec3},
 };
 
@@ -30,30 +30,32 @@ pub trait Hittable: Send + Sync {
 }
 
 pub enum Shapes {
-    Sphare(Sphere),
+    Sphare(Sphare),
 }
 
 impl Hittable for Shapes {
     fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
         match self {
-            Shapes::Sphare(s) => s.hit(r, ray_tmin, ray_tmax),
+            Self::Sphare(s) => s.hit(r, ray_tmin, ray_tmax),
             // Object::Plane(p) => p.hit(...),
         }
     }
 }
 
+#[derive(Default)]
 pub struct HittableList {
     pub objects: Vec<Shapes>,
 }
 
 impl HittableList {
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             objects: Vec::new(),
         }
     }
 
+    #[must_use]
     pub fn with_object(object: Shapes) -> Self {
         let mut list = Self::new();
         list.add(object);

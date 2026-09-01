@@ -37,7 +37,7 @@ impl Config {
     pub fn get_str(&self, key: &str) -> Result<&str, ConfigError> {
         self.map
             .get(key)
-            .ok_or(ConfigError::KeyNotFound(key.to_string()))
+            .ok_or_else(|| ConfigError::KeyNotFound(key.to_string()))
             .map(|s| s.as_str())
     }
 

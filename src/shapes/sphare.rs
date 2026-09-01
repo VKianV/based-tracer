@@ -5,22 +5,22 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub struct Sphere {
+pub struct Sphare {
     pub center: Point3,
     pub radius: f64,
 }
 
-impl Sphere {
+impl Sphare {
     #[must_use]
     pub const fn new(center: Point3, radius: f64) -> Self {
-        Sphere {
+        Self {
             center,
             radius: radius.max(0.0),
         }
     }
 }
 
-impl Hittable for Sphere {
+impl Hittable for Sphare {
     fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
         let oc = self.center - r.origin();
         let a = r.direction().length_squared();

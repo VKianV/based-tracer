@@ -5,7 +5,7 @@ use based_tracer::{
     ray::Ray,
     shapes::{
         hittable::{HittableList, Shapes},
-        sphare::Sphere,
+        sphare::Sphare,
     },
     utils::{GROUND_CENTER, SPHERE_CENTER},
     vec3::Point3,
@@ -47,8 +47,8 @@ fn run() -> Result<(), AppError> {
 
     // adding items to the world
     let mut world = HittableList::new();
-    world.add(Shapes::Sphare(Sphere::new(SPHERE_CENTER, 0.5)));
-    world.add(Shapes::Sphare(Sphere::new(GROUND_CENTER, 100.0)));
+    world.add(Shapes::Sphare(Sphare::new(SPHERE_CENTER, 0.5)));
+    world.add(Shapes::Sphare(Sphare::new(GROUND_CENTER, 100.0)));
 
     // prepearing the viewport and the camera and justifications for pixel placement
     let viewport_width = viewport_height * image_width_f64 / image_height_f64;
