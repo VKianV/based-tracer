@@ -104,9 +104,9 @@ fn run() -> Result<(), AppError> {
                                 + (w as f64 * pixel_delta_hor)
                                 + (h as f64 * pixel_delta_ver);
                             let ray_direction = pixel_center - camera_center;
-                            let r = Ray::new(camera_center, ray_direction);
+                            let ray = Ray::new(camera_center, ray_direction);
 
-                            write_color(&mut row_bytes, &ray_color(&r, world)).unwrap();
+                            write_color(&mut row_bytes, &ray_color(&ray, world)).unwrap();
                         }
                         tx.send((h, row_bytes)).unwrap();
                     }

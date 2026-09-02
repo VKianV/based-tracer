@@ -21,10 +21,10 @@ impl Sphare {
 }
 
 impl Hittable for Sphare {
-    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
-        let oc = self.center - r.origin();
-        let a = r.direction().length_squared();
-        let h = r.direction().dot(oc);
+    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+        let oc = self.center - ray.origin();
+        let a = ray.direction().length_squared();
+        let h = ray.direction().dot(oc);
         let c = oc.length_squared() - self.radius * self.radius;
 
         let discriminant = h * h - a * c;
@@ -43,16 +43,16 @@ impl Hittable for Sphare {
             }
         }
 
-        let p = r.at(root);
+        let p = ray.at(root);
         let outward_normal = (p - self.center) / self.radius;
 
         let mut rec = HitRecord {
             t: root,
-            p,
+            point: p,
             normal: Vec3::default(), // will be set below
             front_face: false,       // will be set below
         };
-        rec.set_face_normal(r, outward_normal);
+        rec.set_face_normal(ray, outward_normal);
 
         Some(rec)
     }

@@ -21,8 +21,8 @@ use std::io::{self, Write};
 // }
 
 #[must_use]
-pub fn ray_color(r: &Ray, world: &dyn Hittable) -> RGB {
-    if let Some(rec) = world.hit(r, 0.0, f64::INFINITY) {
+pub fn ray_color(ray: &Ray, world: &dyn Hittable) -> RGB {
+    if let Some(rec) = world.hit(ray, 0.0, f64::INFINITY) {
         return 0.5 * (rec.normal + WHITE_COLOR);
     }
     // if let Some(t) = hit_sphere(&SPHERE_CENTER, 0.5, r) {
@@ -31,7 +31,7 @@ pub fn ray_color(r: &Ray, world: &dyn Hittable) -> RGB {
     //     return 0.5 * RGB::new(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0);
     // }
 
-    let a = 0.5 * (r.direction().unit().y() + 1.0);
+    let a = 0.5 * (ray.direction().unit().y() + 1.0);
 
     (1.0 - a) * WHITE_COLOR + a * BLUE_COLOR
 }

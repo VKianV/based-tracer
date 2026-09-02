@@ -6,7 +6,7 @@ use crate::{
 
 #[derive(Default, Clone, Copy)]
 pub struct HitRecord {
-    pub p: Point3,
+    pub point: Point3,
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
@@ -26,7 +26,7 @@ impl HitRecord {
 }
 
 pub trait Hittable: Send + Sync {
-    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
 }
 
 pub enum Shapes {
@@ -34,9 +34,9 @@ pub enum Shapes {
 }
 
 impl Hittable for Shapes {
-    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
         match self {
-            Self::Sphare(s) => s.hit(r, ray_tmin, ray_tmax),
+            Self::Sphare(s) => s.hit(ray, ray_tmin, ray_tmax),
             // Object::Plane(p) => p.hit(...),
         }
     }
