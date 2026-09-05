@@ -21,7 +21,7 @@ use std::io::{self, Write};
 // }
 
 #[must_use]
-pub fn ray_color(ray: &Ray, world: &dyn Hittable) -> RGB {
+pub fn ray_color(ray: &Ray, world: &impl Hittable) -> RGB {
     if let Some(rec) = world.hit(ray, 0.0, f64::INFINITY) {
         return 0.5 * (rec.normal + WHITE_COLOR);
     }
