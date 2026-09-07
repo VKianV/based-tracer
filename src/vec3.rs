@@ -34,7 +34,7 @@ impl Vec3 {
 
     #[must_use]
     pub fn length_squared(self) -> f64 {
-        self.0 * self.0 + self.1 * self.1 + self.2 * self.2
+        self.0.powi(2) + self.1.powi(2) + self.2.powi(2)
     }
 
     #[must_use]

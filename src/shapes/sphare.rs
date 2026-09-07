@@ -27,7 +27,7 @@ impl Hittable for Sphare {
         let h = ray.direction().dot(oc);
         let c = oc.length_squared() - self.radius * self.radius;
 
-        let discriminant = h * h - a * c;
+        let discriminant = h.powi(2) - a * c;
         if discriminant < 0.0 {
             return None;
         }
