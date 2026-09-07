@@ -1,7 +1,12 @@
 [package]
 name = "based-tracer"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
+
+[profile.release]
+panic = "abort"
+lto = true
+strip = true
 
 [dependencies]
 
