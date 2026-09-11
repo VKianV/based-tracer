@@ -25,7 +25,7 @@ impl Hittable for Sphare {
         let oc = self.center - ray.origin();
         let a = ray.direction().length_squared();
         let h = ray.direction().dot(oc);
-        let c = oc.length_squared() - self.radius * self.radius;
+        let c = oc.length_squared() - self.radius.powi(2);
 
         let discriminant = h.powi(2) - a * c;
         if discriminant < 0.0 {
@@ -46,12 +46,7 @@ impl Hittable for Sphare {
         let p = ray.at(root);
         let outward_normal = (p - self.center) / self.radius;
 
-        let mut rec = HitRecord {
-            t: root,
-            point: p,
-            normal: Vec3::default(), // will be set below
-            front_face: false,       // will be set below
-        };
+        let mut rec = HitRecord::new(p, Vec3::default(), root, false);
         rec.set_face_normal(ray, outward_normal);
 
         Some(rec)

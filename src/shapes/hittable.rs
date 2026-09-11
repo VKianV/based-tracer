@@ -13,10 +13,20 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
+    #[must_use]
+    pub const fn new(point: Point3, normal: Vec3, t: f64, front_face: bool) -> Self {
+        Self {
+            point,
+            normal,
+            t,
+            front_face,
+        }
+    }
+
     /// Sets the hit record normal vector.
     /// NOTE: the parameter `outward_normal` is assumed to have unit length.
-    pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
-        self.front_face = r.direction().dot(outward_normal) < 0.0;
+    pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
+        self.front_face = ray.direction().dot(outward_normal) < 0.0;
         self.normal = if self.front_face {
             outward_normal
         } else {

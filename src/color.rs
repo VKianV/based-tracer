@@ -1,7 +1,7 @@
 use crate::{
+    constants::{BLUE_COLOR, WHITE_COLOR},
     ray::Ray,
     shapes::hittable::Hittable,
-    utils::{BLUE_COLOR, WHITE_COLOR},
     vec3::RGB,
 };
 use std::io::{self, Write};
