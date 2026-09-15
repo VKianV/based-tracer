@@ -2,12 +2,12 @@ use based_tracer::{
     app_error::AppError,
     color::{ray_color, write_color},
     config::Config,
+    constants::{GROUND_CENTER, SPHERE_CENTER},
     ray::Ray,
     shapes::{
         hittable::{HittableList, Shapes},
         sphare::Sphare,
     },
-    utils::{GROUND_CENTER, SPHERE_CENTER},
     vec3::Point3,
 };
 use std::{
@@ -54,18 +54,19 @@ fn run() -> Result<(), AppError> {
     let viewport_width = viewport_height * image_width_f64 / image_height_f64;
     let camera_center = Point3::zero();
 
-    let viewport_hor = Point3::new(viewport_width, 0.0, 0.0);
-    let viewport_ver = Point3::new(0.0, -viewport_height, 0.0);
+    let viewport_width = Point3::new(viewport_width, 0.0, 0.0);
+    let viewport_height = Point3::new(0.0, -viewport_height, 0.0);
 
-    let pixel_delta_hor = viewport_hor / image_width_f64;
-    let pixel_delta_ver = viewport_ver / image_height_f64;
+    let pixel_delta_width = viewport_width / image_width_f64;
+    let pixel_delta_height = viewport_height / image_height_f64;
 
-    let viewport_upper_left = camera_center
+    let viewport_top_left = camera_center
         - Point3::new(0.0, 0.0, focal_length)
-        - viewport_hor / 2.0
-        - viewport_ver / 2.0;
+        - viewport_width / 2.0
+        - viewport_height / 2.0;
 
-    let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_hor + pixel_delta_ver);
+    let top_left_pixel_position =
+        viewport_top_left + 0.5 * (pixel_delta_width + pixel_delta_height);
 
     // prepearing the hotloop for threads
     let num_threads = std::thread::available_parallelism()
@@ -73,66 +74,84 @@ fn run() -> Result<(), AppError> {
         .unwrap_or(1)
         .min(image_height);
 
-    let next_chunk = AtomicUsize::new(0);
-    let (tx, rx) = mpsc::channel::<(usize, Vec<u8>)>();
-
     println!("Rendering with {num_threads} threads (dynamic scheduling)...");
 
     print!("\x1b[?25l");
     print!("Scanlines remaining: {image_height}");
+    const CHUNK_ROWS: usize = 8;
+
+    let next_row = AtomicUsize::new(0);
+    let (tx, rx) = mpsc::channel::<(usize, usize, Vec<u8>)>();
 
     thread::scope(|s| -> Result<(), AppError> {
         for _ in 0..num_threads {
             let tx = tx.clone();
-            let next_chunk = &next_chunk;
+            let next_row = &next_row;
             let world = &world;
 
             s.spawn(move || {
                 loop {
-                    let chunk_idx = next_chunk.fetch_add(1, Ordering::Relaxed);
-                    if chunk_idx >= image_height {
+                    // One atomic operation per CHUNK_ROWS instead of per row.
+                    let start_row = next_row.fetch_add(CHUNK_ROWS, Ordering::Relaxed);
+
+                    if start_row >= image_height {
                         break;
                     }
 
-                    let start_row = chunk_idx;
-                    let end_row = (chunk_idx + 1).min(image_height);
+                    let end_row = (start_row + CHUNK_ROWS).min(image_height);
+                    let rows = end_row - start_row;
+
+                    // One allocation for the whole chunk.
+                    let mut chunk = Vec::with_capacity(rows * image_width * 3);
 
                     for h in start_row..end_row {
-                        let mut row_bytes = Vec::with_capacity(image_width * 3);
-                        for w in 0..image_width {
-                            let pixel_center = pixel00_loc
-                                + (w as f64 * pixel_delta_hor)
-                                + (h as f64 * pixel_delta_ver);
+                        // Do the vertical multiplication once per row.
+                        let mut pixel_center =
+                            top_left_pixel_position + h as f64 * pixel_delta_height;
+
+                        for _ in 0..image_width {
                             let ray_direction = pixel_center - camera_center;
+
                             let ray = Ray::new(camera_center, ray_direction);
 
-                            write_color(&mut row_bytes, &ray_color(&ray, world)).unwrap();
+                            write_color(&mut chunk, &ray_color(&ray, world)).unwrap();
+
+                            // Addition instead of w * pixel_delta_hor.
+                            pixel_center += pixel_delta_width;
                         }
-                        tx.send((h, row_bytes)).unwrap();
                     }
+
+                    tx.send((start_row, end_row, chunk)).unwrap();
                 }
             });
         }
 
-        let mut rows: Vec<Option<Vec<u8>>> = vec![None; image_height];
-        let mut received = 0;
+        drop(tx);
 
-        while received < image_height {
-            if let Ok((row_idx, data)) = rx.recv() {
-                rows[row_idx] = Some(data);
-                received += 1;
+        let num_chunks = image_height.div_ceil(CHUNK_ROWS);
 
-                let remaining = image_height - received;
-                print!("\x1b[21G\x1b[K {}", remaining);
-            }
+        let mut chunks: Vec<Option<Vec<u8>>> = (0..num_chunks).map(|_| None).collect();
+
+        let mut rows_received = 0;
+
+        while rows_received < image_height {
+            let (start_row, end_row, data) = rx.recv().unwrap();
+
+            let chunk_idx = start_row / CHUNK_ROWS;
+            chunks[chunk_idx] = Some(data);
+
+            rows_received += end_row - start_row;
+
+            let remaining = image_height - rows_received;
+            print!("\x1b[21G\x1b[K {}", remaining);
         }
 
         writeln!(out, "P6")?;
         writeln!(out, "{image_width} {image_height}")?;
         writeln!(out, "255")?;
 
-        for row_data in rows.into_iter().flatten() {
-            out.write_all(&row_data)?;
+        for chunk in chunks.into_iter().flatten() {
+            out.write_all(&chunk)?;
         }
 
         Ok(())

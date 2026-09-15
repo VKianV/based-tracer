@@ -4,28 +4,27 @@ use crate::{
     vec3::{Point3, Vec3},
 };
 
-#[derive(Default, Clone, Copy)]
 pub struct HitRecord {
     pub point: Point3,
     pub normal: Vec3,
-    pub t: f64,
+    pub distance: f64,
     pub front_face: bool,
 }
 
 impl HitRecord {
     #[must_use]
-    pub const fn new(point: Point3, normal: Vec3, t: f64, front_face: bool) -> Self {
+    pub const fn new(point: Point3, normal: Vec3, distance: f64, front_face: bool) -> Self {
         Self {
             point,
             normal,
-            t,
+            distance,
             front_face,
         }
     }
 
     /// Sets the hit record normal vector.
     /// NOTE: the parameter `outward_normal` is assumed to have unit length.
-    pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
+    pub fn set_face_and_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
         self.front_face = ray.direction().dot(outward_normal) < 0.0;
         self.normal = if self.front_face {
             outward_normal
@@ -82,14 +81,14 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
         let mut closest_so_far = ray_tmax;
         let mut hit_anything = None;
 
         for object in &self.objects {
-            if let Some(temp_rec) = object.hit(r, ray_tmin, closest_so_far) {
-                closest_so_far = temp_rec.t;
-                hit_anything = Some(temp_rec);
+            if let Some(temp_hit_record) = object.hit(ray, ray_tmin, closest_so_far) {
+                closest_so_far = temp_hit_record.distance;
+                hit_anything = Some(temp_hit_record);
             }
         }
 

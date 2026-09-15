@@ -4,7 +4,6 @@ use crate::{
     vec3::{Point3, Vec3},
 };
 
-#[derive(Clone, Copy)]
 pub struct Sphare {
     pub center: Point3,
     pub radius: f64,
@@ -43,12 +42,11 @@ impl Hittable for Sphare {
             }
         }
 
-        let p = ray.at(root);
-        let outward_normal = (p - self.center) / self.radius;
+        let point = ray.at(root);
 
-        let mut rec = HitRecord::new(p, Vec3::default(), root, false);
-        rec.set_face_normal(ray, outward_normal);
+        let mut hit_record = HitRecord::new(point, Vec3::default(), root, false);
+        hit_record.set_face_and_normal(ray, (point - self.center) / self.radius);
 
-        Some(rec)
+        Some(hit_record)
     }
 }
