@@ -161,7 +161,4 @@ fn run() -> Result<(), AppError> {
     println!("Done in {:.3}s!", start.elapsed().as_secs_f64());
 
     Ok(())
- // development changed
- // development changed
- // development changed
 }
