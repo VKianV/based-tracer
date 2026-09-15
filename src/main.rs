@@ -39,7 +39,7 @@ fn run() -> Result<(), AppError> {
     let image_height = config.get_usize("image_height")?;
     let focal_length = config.get_f64("focal_length")?;
     let viewport_height = config.get_f64("viewport_height")?;
-    let output_name = config.get_str("output_name")?;
+    let output_name = config.get_string("output_name")?;
 
     // prepearing the output render
     let file = File::create(output_name)?;
@@ -161,5 +161,4 @@ fn run() -> Result<(), AppError> {
     println!("Done in {:.3}s!", start.elapsed().as_secs_f64());
 
     Ok(())
-    // a new commit in dev
 }
