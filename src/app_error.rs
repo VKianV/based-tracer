@@ -1,24 +1,23 @@
 use std::{
-    error, fmt, io,
+    fmt, io,
     num::{ParseFloatError, ParseIntError},
     str::ParseBoolError,
 };
 
+// app errors
 #[derive(Debug)]
 pub enum AppError {
-    Io(io::Error),
     Config(ConfigError),
     Thread(io::Error),
+    Io(io::Error),
 }
-
-impl error::Error for AppError {}
 
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Io(e) => write!(f, "[I/O Failure] {e}"),
-            Self::Config(e) => write!(f, "[Config Failure] {e}"),
             Self::Thread(e) => write!(f, "[Thread Failure] A rendering thread panicked {e}"),
+            Self::Config(e) => write!(f, "[Config Failure] {e}"),
+            Self::Io(e) => write!(f, "[I/O Failure] {e}"),
         }
     }
 }
@@ -35,26 +34,35 @@ impl From<ConfigError> for AppError {
     }
 }
 
+// config errors
 #[derive(Debug)]
 pub enum ConfigError {
-    KeyNotFound(String),
     ParseF64(ParseFloatError),
-    ParseU32(ParseIntError),
     ParseBool(ParseBoolError),
+    ParseU32(ParseIntError),
+    FileNotFound(String),
+    KeyNotFound(String),
+    Io(io::Error),
 }
 
 impl fmt::Display for ConfigError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::FileNotFound(path) => write!(f, "Configuration file '{path}' not found"),
             Self::KeyNotFound(key) => write!(f, "Configuration key '{key}' not found"),
-            Self::ParseF64(e) => write!(f, "Failed to parse float: {e}"),
-            Self::ParseU32(e) => write!(f, "Failed to parse integer: {e}"),
             Self::ParseBool(e) => write!(f, "Failed to parse boolean: {e}"),
+            Self::ParseU32(e) => write!(f, "Failed to parse integer: {e}"),
+            Self::ParseF64(e) => write!(f, "Failed to parse float: {e}"),
+            Self::Io(e) => write!(f, "I/O error reading config: {e}"),
         }
     }
 }
 
-impl error::Error for ConfigError {}
+impl From<io::Error> for ConfigError {
+    fn from(e: io::Error) -> Self {
+        Self::Io(e)
+    }
+}
 
 impl From<ParseFloatError> for ConfigError {
     fn from(e: ParseFloatError) -> Self {
