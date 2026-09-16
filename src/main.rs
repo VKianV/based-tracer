@@ -6,7 +6,7 @@ use based_tracer::{
     ray::Ray,
     shapes::{
         hittable::{HittableList, Shapes},
-        sphare::Sphare,
+        sphere::Sphere,
     },
     vec3::Point3,
 };
@@ -47,8 +47,8 @@ fn run() -> Result<(), AppError> {
 
     // adding items to the world
     let mut world = HittableList::new();
-    world.add(Shapes::Sphare(Sphare::new(SPHERE_CENTER, 0.5)));
-    world.add(Shapes::Sphare(Sphare::new(GROUND_CENTER, 100.0)));
+    world.add(Shapes::Sphare(Sphere::new(SPHERE_CENTER, 0.5)));
+    world.add(Shapes::Sphare(Sphere::new(GROUND_CENTER, 100.0)));
 
     // prepearing the viewport and the camera and justifications for pixel placement
     let viewport_width = viewport_height * image_width_f64 / image_height_f64;
@@ -114,14 +114,16 @@ fn run() -> Result<(), AppError> {
 
                             let ray = Ray::new(camera_center, ray_direction);
 
-                            write_color(&mut chunk, &ray_color(&ray, world)).unwrap();
+                            write_color(&mut chunk, &ray_color(&ray, world))
+                                .expect("couldn't write color");
 
                             // Addition instead of w * pixel_delta_hor.
                             pixel_center += pixel_delta_width;
                         }
                     }
 
-                    tx.send((start_row, end_row, chunk)).unwrap();
+                    tx.send((start_row, end_row, chunk))
+                        .expect("couldn't send data from workers");
                 }
             });
         }
@@ -135,7 +137,7 @@ fn run() -> Result<(), AppError> {
         let mut rows_received = 0;
 
         while rows_received < image_height {
-            let (start_row, end_row, data) = rx.recv().unwrap();
+            let (start_row, end_row, data) = rx.recv().expect("couldn't recive data from workers");
 
             let chunk_idx = start_row / CHUNK_ROWS;
             chunks[chunk_idx] = Some(data);
