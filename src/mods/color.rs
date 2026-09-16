@@ -1,5 +1,6 @@
 use crate::mods::{
     constants::{BLUE_COLOR, WHITE_COLOR},
+    interval::Interval,
     ray::Ray,
     shapes::hittable::Hittable,
     vec3::RGB,
@@ -8,7 +9,7 @@ use std::io::{self, Write};
 
 #[must_use]
 pub fn ray_color(ray: &Ray, world: &impl Hittable) -> RGB {
-    if let Some(hit_record) = world.hit(ray, 0.0, f64::INFINITY) {
+    if let Some(hit_record) = world.hit(ray, Interval::new(0.0, f64::INFINITY)) {
         return 0.5 * (hit_record.normal + WHITE_COLOR);
     }
 

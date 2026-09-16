@@ -3,7 +3,7 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub};
 pub type RGB = Vec3;
 pub type Point3 = Vec3;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Vec3(f64, f64, f64);
 
 impl Vec3 {

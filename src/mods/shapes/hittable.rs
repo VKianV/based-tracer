@@ -1,9 +1,11 @@
 use crate::mods::{
+    interval::Interval,
     ray::Ray,
     shapes::sphere::Sphere,
     vec3::{Point3, Vec3},
 };
 
+#[derive(PartialEq)]
 pub struct HitRecord {
     pub point: Point3,
     pub normal: Vec3,
@@ -35,7 +37,7 @@ impl HitRecord {
 }
 
 pub trait Hittable: Send + Sync {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, ray_distance_interval: Interval) -> Option<HitRecord>;
 }
 
 pub enum Shapes {
@@ -43,55 +45,10 @@ pub enum Shapes {
 }
 
 impl Hittable for Shapes {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, ray_distance_interval: Interval) -> Option<HitRecord> {
         match self {
-            Self::Sphere(s) => s.hit(ray, ray_tmin, ray_tmax),
-            // Object::Plane(p) => p.hit(...),
+            Self::Sphere(s) => s.hit(ray, ray_distance_interval),
+            // Self::Plane(p) => p.hit(ray, ray_t),
         }
-    }
-}
-
-#[derive(Default)]
-pub struct HittableList {
-    pub objects: Vec<Shapes>,
-}
-
-impl HittableList {
-    #[must_use]
-    pub const fn new() -> Self {
-        Self {
-            objects: Vec::new(),
-        }
-    }
-
-    #[must_use]
-    pub fn with_object(object: Shapes) -> Self {
-        let mut list = Self::new();
-        list.add(object);
-        list
-    }
-
-    pub fn clear(&mut self) {
-        self.objects.clear();
-    }
-
-    pub fn add(&mut self, object: Shapes) {
-        self.objects.push(object);
-    }
-}
-
-impl Hittable for HittableList {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
-        let mut closest_so_far = ray_tmax;
-        let mut hit_anything = None;
-
-        for object in &self.objects {
-            if let Some(temp_hit_record) = object.hit(ray, ray_tmin, closest_so_far) {
-                closest_so_far = temp_hit_record.distance;
-                hit_anything = Some(temp_hit_record);
-            }
-        }
-
-        hit_anything
     }
 }

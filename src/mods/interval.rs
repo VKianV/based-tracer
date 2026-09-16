@@ -16,6 +16,12 @@ impl Interval {
         max: f64::INFINITY,
     };
 
+    /// The half-open ray range: from the camera plane outward to infinity.
+    pub const NON_NEGATIVE: Self = Self {
+        min: 0.0,
+        max: f64::INFINITY,
+    };
+
     #[must_use]
     pub const fn new(min: f64, max: f64) -> Self {
         Self { min, max }
