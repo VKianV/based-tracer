@@ -1,15 +1,3 @@
-use based_tracer::{
-    app_error::AppError,
-    color::{ray_color, write_color},
-    config::Config,
-    constants::{GROUND_CENTER, SPHERE_CENTER},
-    ray::Ray,
-    shapes::{
-        hittable::{HittableList, Shapes},
-        sphere::Sphere,
-    },
-    vec3::Point3,
-};
 use std::{
     fs::File,
     io::{BufWriter, Write},
@@ -19,6 +7,16 @@ use std::{
     },
     thread,
     time::Instant,
+};
+
+use based_tracer::mods::{
+    app_error::AppError,
+    color::{ray_color, write_color},
+    config::Config,
+    constants::{GROUND_CENTER, SPHERE_CENTER},
+    ray::Ray,
+    shapes::{hittable::Shapes, hittable_list::HittableList, sphere::Sphere},
+    vec3::Point3,
 };
 
 fn main() {
@@ -47,8 +45,8 @@ fn run() -> Result<(), AppError> {
 
     // adding items to the world
     let mut world = HittableList::new();
-    world.add(Shapes::Sphare(Sphere::new(SPHERE_CENTER, 0.5)));
-    world.add(Shapes::Sphare(Sphere::new(GROUND_CENTER, 100.0)));
+    world.add(Shapes::Sphere(Sphere::new(SPHERE_CENTER, 0.5)));
+    world.add(Shapes::Sphere(Sphere::new(GROUND_CENTER, 100.0)));
 
     // prepearing the viewport and the camera and justifications for pixel placement
     let viewport_width = viewport_height * image_width_f64 / image_height_f64;

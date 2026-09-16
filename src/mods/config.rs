@@ -1,9 +1,10 @@
-use crate::app_error::ConfigError;
 use std::{
     collections::HashMap,
     fs::File,
     io::{BufRead, BufReader},
 };
+
+use crate::mods::app_error::ConfigError;
 
 pub struct Config {
     pub map: HashMap<String, String>,

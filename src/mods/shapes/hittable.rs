@@ -1,4 +1,4 @@
-use crate::{
+use crate::mods::{
     ray::Ray,
     shapes::sphere::Sphere,
     vec3::{Point3, Vec3},
@@ -39,13 +39,13 @@ pub trait Hittable: Send + Sync {
 }
 
 pub enum Shapes {
-    Sphare(Sphere),
+    Sphere(Sphere),
 }
 
 impl Hittable for Shapes {
     fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
         match self {
-            Self::Sphare(s) => s.hit(ray, ray_tmin, ray_tmax),
+            Self::Sphere(s) => s.hit(ray, ray_tmin, ray_tmax),
             // Object::Plane(p) => p.hit(...),
         }
     }

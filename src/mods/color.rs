@@ -1,4 +1,4 @@
-use crate::{
+use crate::mods::{
     constants::{BLUE_COLOR, WHITE_COLOR},
     ray::Ray,
     shapes::hittable::Hittable,

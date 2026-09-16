@@ -1,4 +1,4 @@
-use crate::{
+use crate::mods::{
     ray::Ray,
     shapes::hittable::{HitRecord, Hittable},
     vec3::{Point3, Vec3},
