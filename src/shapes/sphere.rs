@@ -4,12 +4,12 @@ use crate::{
     vec3::{Point3, Vec3},
 };
 
-pub struct Sphare {
+pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
 }
 
-impl Sphare {
+impl Sphere {
     #[must_use]
     pub const fn new(center: Point3, radius: f64) -> Self {
         Self {
@@ -19,7 +19,7 @@ impl Sphare {
     }
 }
 
-impl Hittable for Sphare {
+impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
         let oc = self.center - ray.origin();
         let a = ray.direction().length_squared();

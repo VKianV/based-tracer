@@ -1,2 +1,2 @@
 pub mod hittable;
-pub mod sphare;
+pub mod sphere;

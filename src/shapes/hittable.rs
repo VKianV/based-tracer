@@ -1,6 +1,6 @@
 use crate::{
     ray::Ray,
-    shapes::sphare::Sphare,
+    shapes::sphere::Sphere,
     vec3::{Point3, Vec3},
 };
 
@@ -39,7 +39,7 @@ pub trait Hittable: Send + Sync {
 }
 
 pub enum Shapes {
-    Sphare(Sphare),
+    Sphare(Sphere),
 }
 
 impl Hittable for Shapes {
