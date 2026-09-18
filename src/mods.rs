@@ -1,4 +1,5 @@
 pub mod app_error;
+pub mod camera;
 pub mod color;
 pub mod config;
 pub mod constants;
